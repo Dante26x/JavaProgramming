@@ -1,3 +1,4 @@
+import java.awt.datatransfer.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
@@ -16,16 +17,21 @@ public class work extends JFrame implements ActionListener{
 
     private FgMenu mFile;
     private FgMenu mWork;
-    private FgMenu mList;
+    private JMenu mList;
 
+    private JMenuItem miList;
     private JMenuItem miNew;
     private JMenuItem miOpen;
     private JMenuItem miSave;
     private JMenuItem miFont;
     private JMenuItem miQuit;
+    private JMenuItem miCut;
+    private JMenuItem miCopy;
+    private JMenuItem miPaste;
 
     private JTextArea ta=new JTextArea();
     private JScrollPane sp=new JScrollPane(ta);
+    public Clipboard clipboard=new Clipboard("系统剪切板");
     //private JTextPane tp=new JTextPane();
     private JToolBar mtb=new JToolBar();
     work(String sTitle){
@@ -38,6 +44,7 @@ public class work extends JFrame implements ActionListener{
         setSize(800,600);
         addToolBar();
         centerWindow();
+        //setup();
         this.setResizable(true);
         isChanged();
         MainFrameWindowListener();
@@ -50,23 +57,38 @@ public class work extends JFrame implements ActionListener{
             fr.setVisible(true);
         });
     }
-    private void addMenus(){
-        setJMenuBar(mb);
-        mFile=new FgMenu("文件（F）",KeyEvent.VK_F);
-        mWork=new FgMenu("Java上机题目");
-        mList=new FgMenu("通讯录",KeyEvent.VK_L);
 
-        miNew=new JMenuItem("新建（N）",KeyEvent.VK_H);
-        miOpen =new JMenuItem("打开（O）...",KeyEvent.VK_O);
-        miSave =new JMenuItem("保存（S）",KeyEvent.VK_S);
-        miFont =new JMenuItem("字体与颜色（F）",KeyEvent.VK_F);
-        miQuit =new JMenuItem("退出（X）...",KeyEvent.VK_X);
+    /*private void setup(){
+        miCut=new JMenuItem("剪切(T)",'T');
+        miCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.CTRL_MASK));
+        miCut.addActionListener(this);
+
+        miCopy=new JMenuItem("复制（C）",'C');
+        miCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C,java.awt.Event.CTRL_MASK));
+        miCopy.addActionListener(this);
+
+        miPaste=new JMenuItem("粘贴（V）",'v');
+        miPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V,java.awt.Event.CTRL_MASK));
+        miPaste.addActionListener(this);
+    }*/
+
+    private void addMenus() {
+        setJMenuBar(mb);
+        mFile = new FgMenu("文件（F）", KeyEvent.VK_F);
+        mWork = new FgMenu("Java上机题目");
+        mList = new FgMenu("通讯录");
+
+        miNew = new JMenuItem("新建（N）", KeyEvent.VK_H);
+        miOpen = new JMenuItem("打开（O）...", KeyEvent.VK_O);
+        miSave = new JMenuItem("保存（S）", KeyEvent.VK_S);
+        miFont = new JMenuItem("字体与颜色（F）", KeyEvent.VK_F);
+        miQuit = new JMenuItem("退出（X）...", KeyEvent.VK_X);
 
         miNew.addActionListener((ActionListener) this);
-        miOpen.addActionListener((ActionListener)this);
-        miSave.addActionListener((ActionListener)this);
-        miFont.addActionListener((ActionListener)this);
-        miQuit.addActionListener((ActionListener)this);
+        miOpen.addActionListener((ActionListener) this);
+        miSave.addActionListener((ActionListener) this);
+        miFont.addActionListener((ActionListener) this);
+        miQuit.addActionListener((ActionListener) this);
 
         miNew.setActionCommand("newFile");
         miOpen.setActionCommand("openFile");
@@ -84,7 +106,7 @@ public class work extends JFrame implements ActionListener{
 
         mb.add(mFile);
         mb.add(mWork);
-        mb.add(mList);
+        mb.add(getJMenu());
     }
     private void addToolBar(){
         Container c=getContentPane();
@@ -101,10 +123,21 @@ public class work extends JFrame implements ActionListener{
         }
         mtb.setFloatable(false);
     }
-    public void centerWindow(){
+    private void centerWindow(){
         Toolkit tk=getToolkit();
         Dimension dm=tk.getScreenSize();
         setLocation((int)(dm.getWidth()-getWidth())/2,(int)(dm.getHeight()-getHeight())/2);
+    }
+    private JMenu getJMenu(){
+        mList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount()==1){
+                    addressList aL=new addressList();
+                }
+            }
+        });
+        return mList;
     }
     public void actionPerformed(ActionEvent e){
         if(e.getActionCommand().equals("newFile")){
@@ -118,7 +151,7 @@ public class work extends JFrame implements ActionListener{
         }else if(e.getActionCommand().equals("saveFile")){
             save();
         }else if(e.getActionCommand().equals("exit")){
-            exit();
+            addressList aL=new addressList();
         }else if(e.getActionCommand().equals("font")){
             font fontChooser=new font(ta);
             fontChooser.showFontDialog(this);
@@ -128,6 +161,12 @@ public class work extends JFrame implements ActionListener{
             ta.setBackground(fontChooser.rBColor());
             testLine view=new testLine(font);
             sp.setRowHeaderView(view);
+        }else if(e.getSource()==miCut){
+            cut();
+        }else if(e.getSource()==miCopy){
+            copy();
+        }else if(e.getSource()==miPaste){
+            paste();
         }
     }
     private void MainFrameWindowListener(){
@@ -332,6 +371,40 @@ public class work extends JFrame implements ActionListener{
             if(result==JOptionPane.OK_OPTION){
                 work.this.dispose();
                 work.this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+            }
+        }
+    }
+
+    public void cut(){
+        copy();
+        int start=this.ta.getSelectionStart();
+        int end=this.ta.getSelectionEnd();
+        this.ta.replaceRange("",start,end);
+    }
+
+    public void copy(){
+        String temp=this.ta.getSelectedText();
+        StringSelection text=new StringSelection(temp);
+        this.clipboard.setContents(text,null);
+    }
+
+    public void paste(){
+        Transferable contents=this.clipboard.getContents(this);
+        DataFlavor flavor=DataFlavor.stringFlavor;
+        if(contents.isDataFlavorSupported(flavor)){
+            String str;
+            try{
+                str=(String)contents.getTransferData(flavor);
+                if(this.ta.getSelectedText()!=null){
+                    int start=this.ta.getSelectionStart();
+                    int end=this.ta.getSelectionEnd();
+                    this.ta.replaceRange(str,start,end);
+                }else{
+                    int mouse=this.ta.getCaretPosition();
+                    this.ta.insert(str,mouse);
+                }
+            } catch (UnsupportedFlavorException | IOException e) {
+                e.printStackTrace();
             }
         }
     }
