@@ -119,6 +119,9 @@ public class font extends JDialog{
         fontText=new JTextField();
         fontText.setEditable(false);
         fontText.setBackground(Color.WHITE);
+        styleText=new JTextField();
+        styleText.setEditable(false);
+        styleText.setBackground(Color.WHITE);
         sizeText=new JTextField("12");
         Document doc =new PlainDocument(){
             public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
@@ -175,11 +178,11 @@ public class font extends JDialog{
         fontText.setMinimumSize(new Dimension(1160,20));
         box2.add(fontText);
         box2.add(Box.createHorizontalStrut(5));
-        //styleText.setPreferredSize(new Dimension(90,20));
-        //styleText.setMinimumSize(new Dimension(90,20));
-        //styleText.setMaximumSize(new Dimension(90,20));
-        //box2.add(styleText);
-        //box2.add(Box.createHorizontalStrut(5));
+        styleText.setPreferredSize(new Dimension(90,20));
+        styleText.setMinimumSize(new Dimension(90,20));
+        styleText.setMaximumSize(new Dimension(90,20));
+        box2.add(styleText);
+        box2.add(Box.createHorizontalStrut(5));
         sizeText.setPreferredSize(new Dimension(80,20));
         sizeText.setMaximumSize(new Dimension(80,20));
         sizeText.setMinimumSize(new Dimension(80,20));
@@ -259,7 +262,7 @@ public class font extends JDialog{
                 }
             }
         });
-        /*styleList.addListSelectionListener(new ListSelectionListener() {
+        styleList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent listSelectionEvent) {
                 if(!listSelectionEvent.getValueIsAdjusting()){
@@ -267,7 +270,7 @@ public class font extends JDialog{
                     setPreview();
                 }
             }
-        });*/
+        });
         sizeList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent listSelectionEvent) {
